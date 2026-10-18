@@ -84,7 +84,7 @@ theorem iUnion_openStar :
   -- some w is positive since they sum to 1
   have ⟨e, he_mem, he_pos⟩ : ∃ e ∈ faceEmbed s, 0 < w e := by
     by_contra h
-    push_neg at h
+    push Not at h
     have : ∑ e ∈ faceEmbed s, w e = 0 :=
       Finset.sum_eq_zero (fun e he => le_antisymm (h e he) (hw_nn e he))
     linarith [hw_sum]

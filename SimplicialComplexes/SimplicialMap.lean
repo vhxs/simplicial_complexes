@@ -43,7 +43,7 @@ variable {N : CombinatorialSimplicialComplex Y}
 
 instance : FunLike (SimplicialMap K L) V W where
   coe f := f.toFun
-  coe_injective' f g h := by cases f; cases g; congr
+  coe_injective f g h := by cases f; cases g; congr
 
 @[ext]
 theorem ext {f g : SimplicialMap K L} (h : ∀ v, f v = g v) : f = g :=

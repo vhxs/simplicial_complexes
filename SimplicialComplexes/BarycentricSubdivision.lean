@@ -52,11 +52,11 @@ def listVal (l : List V) (f : V → M) (i : ℕ) : M :=
 
 omit [DecidableEq V] in
 theorem listVal_of_lt {l : List V} {f : V → M} {i : ℕ} (h : i < l.length) :
-    listVal l f i = f l[i] := dif_pos h
+    listVal l f i = f l[i] := dite_eq_left h
 
 omit [DecidableEq V] in
 theorem listVal_of_le {l : List V} {f : V → M} {i : ℕ} (h : l.length ≤ i) :
-    listVal l f i = 0 := dif_neg (Nat.not_lt.mpr h)
+    listVal l f i = 0 := dite_eq_right (Nat.not_lt.mpr h)
 
 /-- Summing `f` over the first `n` entries of a duplicate-free list gives the same result
 whether taken over the prefix as a finset or as a range sum. -/
@@ -144,7 +144,7 @@ omit [DecidableEq V] in
 theorem barySubdivision_vertices :
     (barySubdivision K).vertices = Set.univ := by
   ext c
-  simp only [mem_vertices, barySubdivision_faces, Set.mem_setOf_eq, Set.mem_univ, iff_true]
+  simp only [mem_vertices, barySubdivision_faces, Set.mem_ofPred_eq, Set.mem_univ, iff_true]
   exact singleton_mem_barySubdivision c
 
 /-! ### Barycenter of a face -/
@@ -566,10 +566,10 @@ theorem le_weightedBarycenter_apply {T : Finset (FaceVertex K)} {μ : FaceVertex
     (hμ : ∀ c ∈ T, 0 ≤ μ c) {d : FaceVertex K} (hd : d ∈ T) {v : V} (hv : v ∈ d.1) :
     μ d / d.1.card ≤ (∑ c ∈ T, μ c • barycenter c.1) v := by
   rw [weightedBarycenter_apply]
-  rw [show μ d / (d.1.card : ℝ) = (if v ∈ d.1 then μ d / d.1.card else 0) from (if_pos hv).symm]
+  rw [show μ d / (d.1.card : ℝ) = (if v ∈ d.1 then μ d / d.1.card else 0) from
+    (ite_eq_left hv).symm]
   refine Finset.single_le_sum (f := fun c => if v ∈ c.1 then μ c / (c.1.card : ℝ) else 0)
     (fun c hc => ?_) hd
-  dsimp only
   split_ifs with h
   · exact div_nonneg (hμ c hc) (Nat.cast_nonneg _)
   · exact le_rfl
@@ -581,7 +581,7 @@ theorem exists_weightedBarycenter_apply_eq {T : Finset (FaceVertex K)} (hT : isC
   · obtain ⟨v, hv⟩ := K.nonempty_of_mem d.2
     refine ⟨v, hv, ?_⟩
     rw [weightedBarycenter_apply, ← Finset.sum_erase_add T _ hd, hT0, Finset.sum_empty,
-      zero_add, if_pos hv]
+      zero_add, ite_eq_left hv]
   · obtain ⟨e, he, hemax⟩ :=
       (isChainFaces_mono (Finset.erase_subset d T) hT).exists_subset_max hT0
     have hed : e.1 ⊆ d.1 := hmax e (Finset.mem_of_mem_erase he)
@@ -590,8 +590,8 @@ theorem exists_weightedBarycenter_apply_eq {T : Finset (FaceVertex K)} (hT : isC
       Finset.exists_of_ssubset (Finset.ssubset_iff_subset_ne.mpr ⟨hed, hne⟩)
     refine ⟨v, hvd, ?_⟩
     rw [weightedBarycenter_apply, ← Finset.sum_erase_add T _ hd,
-      Finset.sum_eq_zero (fun c hc => if_neg (fun hvc => hve (hemax c hc hvc))),
-      zero_add, if_pos hvd]
+      Finset.sum_eq_zero (fun c hc => ite_eq_right (fun hvc => hve (hemax c hc hvc))),
+      zero_add, ite_eq_left hvd]
 
 theorem weightedBarycenter_apply_pos_iff {T : Finset (FaceVertex K)} {μ : FaceVertex K → ℝ}
     {d : FaceVertex K} (hd : d ∈ T) (hmax : ∀ c ∈ T, c.1 ⊆ d.1) (hμ : ∀ c ∈ T, 0 < μ c) (v : V) :
@@ -600,7 +600,7 @@ theorem weightedBarycenter_apply_pos_iff {T : Finset (FaceVertex K)} {μ : FaceV
   · intro hpos
     by_contra hv
     rw [weightedBarycenter_apply,
-      Finset.sum_eq_zero (fun c hc => if_neg (fun hvc => hv (hmax c hc hvc)))] at hpos
+      Finset.sum_eq_zero (fun c hc => ite_eq_right (fun hvc => hv (hmax c hc hvc)))] at hpos
     exact lt_irrefl 0 hpos
   · intro hv
     have h1 := le_weightedBarycenter_apply (fun c hc => (hμ c hc).le) hd hv
@@ -711,12 +711,12 @@ theorem exists_chain_repr_of_mem_sdSpace [Fintype (FaceVertex K)] {x : FaceVerte
     · rcases lt_or_eq_of_le (hx_nn c) with hpos | hzero
       · exact absurd (Finset.mem_filter.mpr ⟨hct, hpos⟩) hc
       · exact hzero.symm
-    · rw [hx_apply c, if_neg hct]
+    · rw [hx_apply c, ite_eq_right hct]
   have hL : sdLinearMap x = ∑ c ∈ t, x c • barycenter c.1 := by
     have h1 : sdLinearMap x = ∑ c ∈ t, w c • barycenter c.1 := by
       rw [hx_eq]; exact sdLinearMap_apply_sum t w
     rw [h1]
-    exact Finset.sum_congr rfl fun c hc => by rw [hx_apply c, if_pos hc]
+    exact Finset.sum_congr rfl fun c hc => by rw [hx_apply c, ite_eq_left hc]
   refine ⟨t.filter (fun c => 0 < x c), isChainFaces_mono (Finset.filter_subset _ _) ht.2,
     fun c hc => (Finset.mem_filter.mp hc).2, hzero, ?_⟩
   rw [hL]

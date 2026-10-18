@@ -91,7 +91,7 @@ private lemma linearIndependent_vertexEmbed_sub {s : Finset V} {v₀ : V} :
              smul_eq_mul, vertexEmbed, Pi.single_apply] at key
   -- Eliminate the v₀ subtraction term
   have hv_ne' : ↑↑i ≠ v₀ := i.2
-  simp only [if_neg hv_ne', sub_zero] at key
+  simp only [ite_eq_right hv_ne', sub_zero] at key
   -- key : ∑ j ∈ t, g j * (if ↑↑i = ↑↑j then 1 else 0) = 0
   -- Reduce the sum to the single i term.
   have sum_eq := Finset.sum_eq_single_of_mem i hi
@@ -99,7 +99,7 @@ private lemma linearIndependent_vertexEmbed_sub {s : Finset V} {v₀ : V} :
     (fun j _ hjne => by
       simp [show (↑↑i : V) ≠ (↑↑j : V) from
         fun h => hjne (Subtype.ext (Subtype.ext h)).symm])
-  simp only [if_true, mul_one] at sum_eq
+  simp only [ite_true, mul_one] at sum_eq
   linarith
 
 /-- The standard basis vectors `{Pi.single v 1 | v ∈ s}` form an affinely independent family.
@@ -135,7 +135,7 @@ theorem affineIndependent_faceEmbed {s : Finset V} :
     have key := congr_fun htg v
     simp only [Pi.zero_apply, Finset.sum_apply, Pi.smul_apply, Pi.sub_apply,
                smul_eq_mul, hb₀_val, vertexEmbed, Pi.single_apply] at key
-    simp only [if_neg hv_ne, sub_zero] at key
+    simp only [ite_eq_right hv_ne, sub_zero] at key
     -- key : ∑ i ∈ t, g i * (↑↑i : V → ℝ) v = 0
     -- Reduce the sum: for j ≠ ⟨⟨vertexEmbed v, _⟩, _⟩, the vector (↑↑j : V → ℝ)
     -- is vertexEmbed w for w ≠ v, so (↑↑j : V → ℝ) v = Pi.single w 1 v = 0.
@@ -177,7 +177,6 @@ noncomputable def geometricRealization (K : CombinatorialSimplicialComplex V) :
     intro u hus hu
     -- u ⊆ faceEmbed s': use subset_image_iff to find t' ⊆ s' with t'.image vertexEmbed = u
     simp only [faceEmbed] at hus
-    rw [Finset.le_iff_subset] at hus
     rw [Finset.subset_image_iff] at hus
     obtain ⟨t', ht'_sub, rfl⟩ := hus
     have ht'_ne : t'.Nonempty := by

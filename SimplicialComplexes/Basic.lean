@@ -72,12 +72,12 @@ theorem not_facet_iff_subface {s : Finset V} (hs : s ∈ K.faces) :
   · intro h
     rcases h with (h | h)
     · exact absurd hs h
-    · push_neg at h
+    · push Not at h
       obtain ⟨t, ht_mem, hst, hne⟩ := h
       exact ⟨t, ht_mem, hst, fun hts => hne (le_antisymm hst hts)⟩
   · rintro ⟨t, ht_mem, hst⟩
     right
-    push_neg
+    push Not
     exact ⟨t, ht_mem, hst.1, fun h => hst.2 (le_of_eq h.symm)⟩
 
 /-! ### Constructions -/
