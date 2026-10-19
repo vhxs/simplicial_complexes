@@ -154,6 +154,29 @@ theorem affineIndependent_faceEmbed {s : Finset V} :
     simp only [sum_eq, hav, mul_one] at key
     exact key
 
+/-! ### Barycentric coordinates -/
+
+/-- A point in `convexHull ℝ ↑(faceEmbed s)` can be written as `∑ v ∈ s, w v • vertexEmbed v`
+with nonneg weights summing to 1. -/
+theorem exists_weights_of_mem_convexHull_faceEmbed {s : Finset V} {y : V → ℝ}
+    (hy : y ∈ convexHull ℝ (↑(faceEmbed s) : Set (V → ℝ))) :
+    ∃ w : V → ℝ, (∀ v ∈ s, 0 ≤ w v) ∧ ∑ v ∈ s, w v = 1 ∧
+      y = ∑ v ∈ s, w v • vertexEmbed v := by
+  rw [Finset.convexHull_eq] at hy
+  obtain ⟨f, hf_nn, hf_sum, hf_cm⟩ := hy
+  have hinj : ∀ a ∈ s, ∀ b ∈ s, vertexEmbed a = vertexEmbed b → a = b :=
+    fun a _ b _ h => vertexEmbed_injective h
+  refine ⟨fun v => f (vertexEmbed v), ?_, ?_, ?_⟩
+  · intro v hv
+    exact hf_nn _ (Finset.mem_image_of_mem _ hv)
+  · simp only [faceEmbed] at hf_sum
+    rwa [← Finset.sum_image hinj]
+  · rw [← hf_cm]
+    simp only [Finset.centerMass, id_eq]
+    rw [hf_sum, inv_one, one_smul]
+    simp only [faceEmbed]
+    exact Finset.sum_image hinj
+
 /-! ### The geometric realization functor -/
 
 /-- The geometric realization of a combinatorial simplicial complex `K` on vertex type `V`

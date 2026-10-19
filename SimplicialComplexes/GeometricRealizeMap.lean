@@ -22,7 +22,7 @@ open Finset Set Geometry PreAbstractSimplicialComplex
 set_option linter.style.openClassical false
 open Classical
 
-variable {V W X Y : Type*}
+variable {V W X Y : Type*} [DecidableEq V] [DecidableEq W] [DecidableEq X] [DecidableEq Y]
 variable {K : PreAbstractSimplicialComplex V}
 variable {L : PreAbstractSimplicialComplex W}
 variable {M : PreAbstractSimplicialComplex X}
@@ -61,6 +61,7 @@ theorem id_toLinearMap [Fintype V] :
   have h : (⇑(SimplicialMap.id K) : V → V) = _root_.id := funext id_apply
   rw [h, FunOnFinite.linearMap_id]
 
+omit [DecidableEq V] in
 @[simp]
 theorem comp_toLinearMap [Fintype V] [Fintype W] [Fintype X]
     (g : SimplicialMap L M) (f : SimplicialMap K L) :

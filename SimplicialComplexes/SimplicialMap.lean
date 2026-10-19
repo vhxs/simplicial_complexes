@@ -26,7 +26,7 @@ open Classical
 
 /-- A simplicial map from `K` to `L` is a function on vertices that sends
 every face of `K` to a face of `L`. -/
-structure SimplicialMap {V W : Type*} (K : PreAbstractSimplicialComplex V)
+structure SimplicialMap {V W : Type*} [DecidableEq W] (K : PreAbstractSimplicialComplex V)
     (L : PreAbstractSimplicialComplex W) where
   /-- The underlying vertex map. -/
   toFun : V → W
@@ -35,7 +35,7 @@ structure SimplicialMap {V W : Type*} (K : PreAbstractSimplicialComplex V)
 
 namespace SimplicialMap
 
-variable {V W X Y : Type*}
+variable {V W X Y : Type*} [DecidableEq V] [DecidableEq W] [DecidableEq X] [DecidableEq Y]
 variable {K : PreAbstractSimplicialComplex V}
 variable {L : PreAbstractSimplicialComplex W}
 variable {M : PreAbstractSimplicialComplex X}
@@ -45,13 +45,16 @@ instance : FunLike (SimplicialMap K L) V W where
   coe f := f.toFun
   coe_injective f g h := by cases f; cases g; congr
 
+omit [DecidableEq V] in
 @[ext]
 theorem ext {f g : SimplicialMap K L} (h : ∀ v, f v = g v) : f = g :=
   DFunLike.ext f g h
 
+omit [DecidableEq V] in
 @[simp]
 theorem toFun_eq_coe (f : SimplicialMap K L) : f.toFun = f := rfl
 
+omit [DecidableEq V] in
 /-- A simplicial map sends vertices to vertices. -/
 theorem map_vertex (f : SimplicialMap K L) {v : V} (hv : v ∈ K.vertices) :
     f v ∈ L.vertices := by
@@ -73,14 +76,17 @@ def comp (g : SimplicialMap L M) (f : SimplicialMap K L) : SimplicialMap K M whe
     rw [← Finset.image_image]
     exact g.map_face (f.map_face hs)
 
+omit [DecidableEq V] in
 @[simp]
 theorem comp_apply (g : SimplicialMap L M) (f : SimplicialMap K L) (v : V) :
     g.comp f v = g (f v) := rfl
 
 theorem comp_id (f : SimplicialMap K L) : f.comp (SimplicialMap.id K) = f := by ext; simp
 
+omit [DecidableEq V] in
 theorem id_comp (f : SimplicialMap K L) : (SimplicialMap.id L).comp f = f := by ext; simp
 
+omit [DecidableEq V] in
 theorem comp_assoc (h : SimplicialMap M N) (g : SimplicialMap L M) (f : SimplicialMap K L) :
     (h.comp g).comp f = h.comp (g.comp f) := by ext; simp
 
