@@ -4,3 +4,4 @@ import SimplicialComplexes.SimplicialMap
 import SimplicialComplexes.GeometricRealizeMap
 import SimplicialComplexes.Star
 import SimplicialComplexes.BarycentricSubdivision
+import SimplicialComplexes.SimplicialApproximation
