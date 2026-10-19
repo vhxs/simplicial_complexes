@@ -753,10 +753,9 @@ theorem sdRealizeMap_surjective [Fintype (FaceVertex K)] :
   change sdLinearMap (∑ c ∈ t, μ c • vertexEmbed c) = y
   rw [sdLinearMap_apply_sum, hμ_eq, ← hy_eq]
 
-/-- `sdRealizeMap` is a homeomorphism: continuous bijection from a compact space to a Hausdorff
-space. Compactness of `|sd(K)|` must be supplied as an instance. -/
-theorem sdRealizeMap_isHomeomorph [Fintype (FaceVertex K)]
-    [CompactSpace (barySubdivision K).geometricRealization.space] :
+/-- `sdRealizeMap` is a homeomorphism: a continuous bijection from a compact space to a
+Hausdorff space. -/
+theorem sdRealizeMap_isHomeomorph [Fintype (FaceVertex K)] :
     IsHomeomorph (sdRealizeMap (K := K)) := by
   rw [isHomeomorph_iff_isEmbedding_surjective]
   exact ⟨(sdRealizeMap.continuous_toFun.isClosedEmbedding sdRealizeMap_injective).isEmbedding,

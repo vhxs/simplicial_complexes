@@ -205,4 +205,18 @@ theorem geometricRealization_faces (K : PreAbstractSimplicialComplex V) :
     K.geometricRealization.faces = faceEmbed '' K.faces :=
   rfl
 
+/-! ### Compactness -/
+
+/-- Over a finite vertex type, `|K|` is a finite union of convex hulls of finite sets,
+hence compact. -/
+theorem isCompact_space [Finite V] (K : PreAbstractSimplicialComplex V) :
+    IsCompact K.geometricRealization.space := by
+  apply Set.Finite.isCompact_biUnion
+  · exact (Set.toFinite K.faces).image faceEmbed
+  · exact fun s _ => Set.Finite.isCompact_convexHull ℝ s.finite_toSet
+
+instance compactSpace_space [Finite V] (K : PreAbstractSimplicialComplex V) :
+    CompactSpace K.geometricRealization.space :=
+  isCompact_iff_compactSpace.mp (isCompact_space K)
+
 end PreAbstractSimplicialComplex
