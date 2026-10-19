@@ -118,6 +118,71 @@ theorem norm_centroid_sub_centroid_le (hst : s ⊆ t) (hs : s.Nonempty) :
 
 end Centroid
 
+/-! ### One step of subdivision -/
+
+section Subdivision
+
+variable {W : Type*} [DecidableEq W] {C : PreAbstractSimplicialComplex W}
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+
+omit [DecidableEq W] in
+/-- Distinct faces in a chain have distinct cardinalities, so a bound on the number of vertices
+of a face of `C` bounds the number of vertices of a face of `sd C`. Dimension is preserved. -/
+theorem card_le_of_mem_barySubdivision {N : ℕ} (hN : ∀ s ∈ C.faces, s.card ≤ N)
+    {t : Finset (FaceVertex C)} (ht : t ∈ (barySubdivision C).faces) : t.card ≤ N := by
+  have hmaps : Set.MapsTo (fun c : FaceVertex C => c.1.card) ↑t ↑(Finset.Icc 1 N) := by
+    intro c _
+    simp only [Finset.coe_Icc, Set.mem_Icc]
+    exact ⟨Finset.card_pos.mpr (nonempty_of_mem c.2), hN c.1 c.2⟩
+  have hinj : Set.InjOn (fun c : FaceVertex C => c.1.card) ↑t := by
+    intro c hc c' hc' hcard
+    by_contra hne
+    rcases ht.2 hc hc' hne with h | h
+    · exact hne (Subtype.ext (Finset.eq_of_subset_of_card_le h hcard.ge))
+    · exact hne (Subtype.ext (Finset.eq_of_subset_of_card_le h hcard.le).symm)
+  calc t.card ≤ (Finset.Icc 1 N).card := Finset.card_le_card_of_injOn _ hmaps hinj
+    _ = N := by simp
+
+omit [DecidableEq W] in
+/-- **One step of subdivision shrinks diameters.** If every face of `C` spans a set of diameter
+at most `m` and has at most `N` vertices, then every face of `sd C` — a chain of faces of `C` —
+spans barycenters of diameter at most `(1 - 1/N) · m`. -/
+theorem diam_image_centroid_le {p : W → E} {m : ℝ} {N : ℕ}
+    (hm : ∀ s ∈ C.faces, diam (p '' (↑s : Set W)) ≤ m)
+    (hN : ∀ s ∈ C.faces, s.card ≤ N)
+    {t : Finset (FaceVertex C)} (ht : t ∈ (barySubdivision C).faces) :
+    diam ((fun c : FaceVertex C => centroid p c.1) '' (↑t : Set (FaceVertex C)))
+      ≤ (1 - (N : ℝ)⁻¹) * m := by
+  obtain ⟨c₀, hc₀⟩ := ht.1
+  have hm0 : 0 ≤ m := le_trans diam_nonneg (hm c₀.1 c₀.2)
+  have hN1 : 1 ≤ N := le_trans (Finset.card_pos.mpr (nonempty_of_mem c₀.2)) (hN c₀.1 c₀.2)
+  have h1N : (1 : ℝ) ≤ N := by exact_mod_cast hN1
+  have hfactor : (0 : ℝ) ≤ 1 - (N : ℝ)⁻¹ := by
+    have := one_div_le_one_div_of_le (by norm_num : (0 : ℝ) < 1) h1N
+    simp only [one_div, inv_one] at this
+    linarith
+  have key : ∀ a b : FaceVertex C, a.1 ⊆ b.1 →
+      ‖centroid p a.1 - centroid p b.1‖ ≤ (1 - (N : ℝ)⁻¹) * m := by
+    intro a b hab
+    refine le_trans (norm_centroid_sub_centroid_le hab (nonempty_of_mem a.2)) ?_
+    have hb1 : (0 : ℝ) < b.1.card := by
+      exact_mod_cast Finset.card_pos.mpr (nonempty_of_mem b.2)
+    have hcardle : ((N : ℝ))⁻¹ ≤ ((b.1.card : ℝ))⁻¹ := by
+      rw [← one_div, ← one_div]
+      exact one_div_le_one_div_of_le hb1 (by exact_mod_cast hN b.1 b.2)
+    exact mul_le_mul (by linarith) (hm b.1 b.2) diam_nonneg hfactor
+  refine diam_le_of_forall_dist_le (mul_nonneg hfactor hm0) ?_
+  rintro _ ⟨c, hc, rfl⟩ _ ⟨c', hc', rfl⟩
+  rw [dist_eq_norm]
+  rcases eq_or_ne c c' with rfl | hne
+  · simpa using mul_nonneg hfactor hm0
+  · rcases ht.2 hc hc' hne with h | h
+    · exact key c c' h
+    · rw [← norm_neg, neg_sub]
+      exact key c' c h
+
+end Subdivision
+
 /-! ### Specialization to the vertex embedding -/
 
 variable {V : Type*} [DecidableEq V] [Fintype V]
