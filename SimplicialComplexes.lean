@@ -6,3 +6,4 @@ import SimplicialComplexes.Star
 import SimplicialComplexes.BarycentricSubdivision
 import SimplicialComplexes.SimplicialApproximation
 import SimplicialComplexes.Mesh
+import SimplicialComplexes.IteratedSubdivision
