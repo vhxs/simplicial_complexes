@@ -62,6 +62,17 @@ noncomputable def faceEmbed (s : Finset V) : Finset (V → ℝ) := s.image verte
 theorem faceEmbed_nonempty {s : Finset V} (hs : s.Nonempty) : (faceEmbed s).Nonempty := by
   exact Finset.Nonempty.image hs vertexEmbed
 
+/-- Membership in `faceEmbed`, stated so that callers never have to re-synthesize the
+`DecidableEq (V → ℝ)` instance that `faceEmbed` carries. -/
+theorem mem_faceEmbed_of_mem {s : Finset V} {v : V} (hv : v ∈ s) :
+    vertexEmbed v ∈ faceEmbed s :=
+  Finset.mem_image_of_mem _ hv
+
+/-- `faceEmbed s`, viewed as a set, is the image of `s` under the vertex embedding. -/
+theorem coe_faceEmbed (s : Finset V) :
+    (↑(faceEmbed s) : Set (V → ℝ)) = vertexEmbed '' (↑s : Set V) := by
+  rw [faceEmbed, Finset.coe_image]
+
 theorem faceEmbed_mono {s t : Finset V} (h : s ⊆ t) : faceEmbed s ⊆ faceEmbed t := by
   exact Finset.image_subset_image h
 
