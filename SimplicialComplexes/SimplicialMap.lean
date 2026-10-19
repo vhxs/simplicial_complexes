@@ -26,8 +26,8 @@ open Classical
 
 /-- A simplicial map from `K` to `L` is a function on vertices that sends
 every face of `K` to a face of `L`. -/
-structure SimplicialMap {V W : Type*} (K : CombinatorialSimplicialComplex V)
-    (L : CombinatorialSimplicialComplex W) where
+structure SimplicialMap {V W : Type*} (K : PreAbstractSimplicialComplex V)
+    (L : PreAbstractSimplicialComplex W) where
   /-- The underlying vertex map. -/
   toFun : V → W
   /-- The image of every face is a face. -/
@@ -36,10 +36,10 @@ structure SimplicialMap {V W : Type*} (K : CombinatorialSimplicialComplex V)
 namespace SimplicialMap
 
 variable {V W X Y : Type*}
-variable {K : CombinatorialSimplicialComplex V}
-variable {L : CombinatorialSimplicialComplex W}
-variable {M : CombinatorialSimplicialComplex X}
-variable {N : CombinatorialSimplicialComplex Y}
+variable {K : PreAbstractSimplicialComplex V}
+variable {L : PreAbstractSimplicialComplex W}
+variable {M : PreAbstractSimplicialComplex X}
+variable {N : PreAbstractSimplicialComplex Y}
 
 instance : FunLike (SimplicialMap K L) V W where
   coe f := f.toFun
@@ -55,11 +55,11 @@ theorem toFun_eq_coe (f : SimplicialMap K L) : f.toFun = f := rfl
 /-- A simplicial map sends vertices to vertices. -/
 theorem map_vertex (f : SimplicialMap K L) {v : V} (hv : v ∈ K.vertices) :
     f v ∈ L.vertices := by
-  rw [CombinatorialSimplicialComplex.mem_vertices] at hv ⊢
+  rw [PreAbstractSimplicialComplex.mem_vertices] at hv ⊢
   simpa using f.map_face hv
 
 /-- The identity simplicial map. -/
-def id (K : CombinatorialSimplicialComplex V) : SimplicialMap K K where
+def id (K : PreAbstractSimplicialComplex V) : SimplicialMap K K where
   toFun := _root_.id
   map_face hs := by rwa [Finset.image_id]
 

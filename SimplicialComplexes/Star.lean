@@ -16,7 +16,7 @@ whose barycentric coordinate at `v` is strictly positive:
 
 ## Main definitions
 
-* `CombinatorialSimplicialComplex.openStar`: The open star of a vertex.
+* `PreAbstractSimplicialComplex.openStar`: The open star of a vertex.
 
 ## Main results
 
@@ -26,20 +26,20 @@ whose barycentric coordinate at `v` is strictly positive:
 * `SimplicialMap.mapsTo_openStar`: Simplicial maps send open stars to open stars.
 -/
 
-open Finset Set Geometry CombinatorialSimplicialComplex
+open Finset Set Geometry PreAbstractSimplicialComplex
 
 set_option linter.style.openClassical false
 open Classical
 
-namespace CombinatorialSimplicialComplex
+namespace PreAbstractSimplicialComplex
 
-variable {V : Type*} {K : CombinatorialSimplicialComplex V}
+variable {V : Type*} {K : PreAbstractSimplicialComplex V}
 
 /-! ### Definition -/
 
 /-- The open star of vertex `v` in `K`: the set of points in the geometric realization
 whose barycentric coordinate at `v` is strictly positive. -/
-def openStar (K : CombinatorialSimplicialComplex V) (v : V) :
+def openStar (K : PreAbstractSimplicialComplex V) (v : V) :
     Set K.geometricRealization.space :=
   {x | 0 < (x : V → ℝ) v}
 
@@ -109,11 +109,11 @@ theorem iUnion_openStar :
           Finset.single_le_sum (f := fun e : V → ℝ => w e * e v)
             hterm_nn (Finset.mem_image_of_mem _ hv_mem)
 
-end CombinatorialSimplicialComplex
+end PreAbstractSimplicialComplex
 
 namespace SimplicialMap
 
-variable {W : Type*} {L : CombinatorialSimplicialComplex W}
+variable {W : Type*} {L : PreAbstractSimplicialComplex W}
 
 /-- A simplicial map sends the open star of `v` into the open star of `f v`. -/
 theorem mapsTo_openStar [Fintype V] [Fintype W]

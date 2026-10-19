@@ -25,7 +25,7 @@ combinatorial face as the corresponding finite set of basis vectors.
 
 open Finset Set Geometry
 
-namespace CombinatorialSimplicialComplex
+namespace PreAbstractSimplicialComplex
 
 -- Classical decidability is needed for Finset operations on (V → ℝ),
 -- since ℝ does not have computable decidable equality.
@@ -114,7 +114,7 @@ theorem affineIndependent_faceEmbed {s : Finset V} :
   · -- faceEmbed ∅ = ∅; the index type is empty so the statement holds vacuously.
     simp only [faceEmbed, Finset.image_empty]
     intro _ _ _ _ i
-    exact absurd i.2 (notMem_empty _)
+    exact absurd i.2 (Finset.notMem_empty _)
   · -- Pick b₀ = vertexEmbed v₀ as the base point.
     have hb₀ : vertexEmbed v₀ ∈ faceEmbed s := Finset.mem_image_of_mem _ hv₀
     let b₀ : ↑(faceEmbed s) := ⟨vertexEmbed v₀, hb₀⟩
@@ -161,7 +161,7 @@ as a `Geometry.SimplicialComplex ℝ (V → ℝ)`.
 
 Each vertex `v : V` is realized as `Pi.single v 1 : V → ℝ`, and each face is realized
 as the convex hull of the corresponding standard basis vectors. -/
-noncomputable def geometricRealization (K : CombinatorialSimplicialComplex V) :
+noncomputable def geometricRealization (K : PreAbstractSimplicialComplex V) :
     Geometry.SimplicialComplex ℝ (V → ℝ) where
   faces := faceEmbed '' K.faces
   indep := by
@@ -201,8 +201,8 @@ noncomputable def geometricRealization (K : CombinatorialSimplicialComplex V) :
     exact (AffineIndependent.convexHull_inter' hind).ge
 
 @[simp]
-theorem geometricRealization_faces (K : CombinatorialSimplicialComplex V) :
+theorem geometricRealization_faces (K : PreAbstractSimplicialComplex V) :
     K.geometricRealization.faces = faceEmbed '' K.faces :=
   rfl
 
-end CombinatorialSimplicialComplex
+end PreAbstractSimplicialComplex

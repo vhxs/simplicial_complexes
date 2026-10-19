@@ -17,16 +17,16 @@ that sends each standard basis vector `Pi.single v 1` to `Pi.single (f v) 1`.
 * `SimplicialMap.realizeMap`: The induced continuous map between geometric realizations.
 -/
 
-open Finset Set Geometry CombinatorialSimplicialComplex
+open Finset Set Geometry PreAbstractSimplicialComplex
 
 set_option linter.style.openClassical false
 open Classical
 
 variable {V W X Y : Type*}
-variable {K : CombinatorialSimplicialComplex V}
-variable {L : CombinatorialSimplicialComplex W}
-variable {M : CombinatorialSimplicialComplex X}
-variable {N : CombinatorialSimplicialComplex Y}
+variable {K : PreAbstractSimplicialComplex V}
+variable {L : PreAbstractSimplicialComplex W}
+variable {M : PreAbstractSimplicialComplex X}
+variable {N : PreAbstractSimplicialComplex Y}
 
 namespace SimplicialMap
 

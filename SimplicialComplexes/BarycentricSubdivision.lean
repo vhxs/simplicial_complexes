@@ -9,7 +9,7 @@ import SimplicialComplexes.GeometricRealization
 
 This file defines the (combinatorial) barycentric subdivision of a simplicial complex.
 
-Given `K : CombinatorialSimplicialComplex V`, the barycentric subdivision `barySubdivision K`
+Given `K : PreAbstractSimplicialComplex V`, the barycentric subdivision `barySubdivision K`
 is a new simplicial complex whose:
 - vertices are the faces of `K` (type `FaceVertex K`)
 - faces are nonempty finite chains of faces of `K` under inclusion
@@ -87,11 +87,11 @@ theorem sum_toFinset_take_eq_sum_range {l : List V} (hl : l.Nodup) (f : V → M)
 end ListVal
 
 /-- The vertex type of the barycentric subdivision of `K`: faces of `K`. -/
-abbrev FaceVertex (K : CombinatorialSimplicialComplex V) := {s : Finset V // s ∈ K.faces}
+abbrev FaceVertex (K : PreAbstractSimplicialComplex V) := {s : Finset V // s ∈ K.faces}
 
-namespace CombinatorialSimplicialComplex
+namespace PreAbstractSimplicialComplex
 
-variable {K : CombinatorialSimplicialComplex V}
+variable {K : PreAbstractSimplicialComplex V}
 
 /-! ### Chains of faces -/
 
@@ -118,11 +118,10 @@ theorem isChainFaces_mono {s t : Finset (FaceVertex K)} (hst : s ⊆ t)
 /-! ### The barycentric subdivision -/
 
 /-- The barycentric subdivision of `K`: faces are nonempty chains of faces of `K`. -/
-def barySubdivision (K : CombinatorialSimplicialComplex V) :
-    CombinatorialSimplicialComplex (FaceVertex K) where
+def barySubdivision (K : PreAbstractSimplicialComplex V) :
+    PreAbstractSimplicialComplex (FaceVertex K) where
   faces := {t | t.Nonempty ∧ isChainFaces t}
-  nonempty_of_mem h := h.1
-  down_closed h hst hne := ⟨hne, isChainFaces_mono hst h.2⟩
+  isRelLowerSet_faces := fun {_} h => ⟨h.1, fun _ hst hne => ⟨hne, isChainFaces_mono hst h.2⟩⟩
 
 omit [DecidableEq V] in
 @[simp]
@@ -763,4 +762,4 @@ theorem sdRealizeMap_isHomeomorph [Fintype (FaceVertex K)]
   exact ⟨(sdRealizeMap.continuous_toFun.isClosedEmbedding sdRealizeMap_injective).isEmbedding,
          sdRealizeMap_surjective⟩
 
-end CombinatorialSimplicialComplex
+end PreAbstractSimplicialComplex
