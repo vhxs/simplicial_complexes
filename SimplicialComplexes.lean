@@ -7,3 +7,4 @@ import SimplicialComplexes.BarycentricSubdivision
 import SimplicialComplexes.SimplicialApproximation
 import SimplicialComplexes.Mesh
 import SimplicialComplexes.IteratedSubdivision
+import SimplicialComplexes.ChromaticSubdivision
