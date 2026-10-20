@@ -77,6 +77,96 @@ theorem sdPoints_zero (K : PreAbstractSimplicialComplex V) :
 theorem sdPoints_succ (K : PreAbstractSimplicialComplex V) (n : ℕ)
     (c : SdVertex K (n + 1)) : sdPoints K (n + 1) c = centroid (sdPoints K n) c.1 := rfl
 
+/-! ### Instances for the iterated vertex types -/
+
+/-- Vertices of `sd^n K` have decidable equality: at each step they are faces of the previous
+complex, i.e. a subtype of `Finset` of the previous vertex type. -/
+instance instDecidableEqSdVertex (K : PreAbstractSimplicialComplex V) :
+    ∀ n, DecidableEq (SdVertex K n)
+  | 0 => inferInstanceAs (DecidableEq V)
+  | n + 1 =>
+    letI := instDecidableEqSdVertex K n
+    inferInstanceAs (DecidableEq {s : Finset (SdVertex K n) // s ∈ (sdComplex K n).faces})
+
+/-- `sd^n K` has finitely many vertices. -/
+noncomputable instance instFintypeSdVertex (K : PreAbstractSimplicialComplex V) :
+    ∀ n, Fintype (SdVertex K n)
+  | 0 => inferInstanceAs (Fintype V)
+  | n + 1 =>
+    letI := instFintypeSdVertex K n
+    letI := instDecidableEqSdVertex K n
+    inferInstanceAs (Fintype {s : Finset (SdVertex K n) // s ∈ (sdComplex K n).faces})
+
+/-- The same instances, in the shape instance search meets them at the recursive step. -/
+noncomputable instance (K : PreAbstractSimplicialComplex V) (n : ℕ) :
+    Fintype (FaceVertex (sdComplex K n)) := instFintypeSdVertex K (n + 1)
+
+instance (K : PreAbstractSimplicialComplex V) (n : ℕ) :
+    DecidableEq (FaceVertex (sdComplex K n)) := instDecidableEqSdVertex K (n + 1)
+
+/-! ### The realization map of the iterated subdivision -/
+
+/-- The linear map placing `sd^n K` into `V → ℝ`, obtained by composing the one-step maps. -/
+noncomputable def sdLinearIter (K : PreAbstractSimplicialComplex V) :
+    (n : ℕ) → ((SdVertex K n → ℝ) →ₗ[ℝ] (V → ℝ))
+  | 0 => LinearMap.id
+  | n + 1 => (sdLinearIter K n).comp sdLinearMap
+
+@[simp]
+theorem sdLinearIter_zero (K : PreAbstractSimplicialComplex V) :
+    sdLinearIter K 0 = LinearMap.id := rfl
+
+@[simp]
+theorem sdLinearIter_succ (K : PreAbstractSimplicialComplex V) (n : ℕ) :
+    sdLinearIter K (n + 1) = (sdLinearIter K n).comp sdLinearMap := rfl
+
+omit [DecidableEq V] in
+/-- One step: a linear map placing the vertices of `C` at points `q` places the vertices of
+`sd C` — which are faces of `C` — at the corresponding centroids.
+
+This is stated for a general complex rather than inline in the induction below because `rw`
+cannot see through the type-level recursion defining `SdVertex`. -/
+theorem comp_sdLinearMap_apply_vertexEmbed {W : Type*} [DecidableEq W]
+    {C : PreAbstractSimplicialComplex W} [Fintype (FaceVertex C)]
+    (φ : (W → ℝ) →ₗ[ℝ] (V → ℝ)) (q : W → (V → ℝ)) (hq : ∀ u, φ (vertexEmbed u) = q u)
+    (c : FaceVertex C) : φ (sdLinearMap (vertexEmbed c)) = centroid q c.1 := by
+  rw [sdLinearMap_apply_vertexEmbed, barycenter, map_smul, map_sum, centroid]
+  exact congrArg _ (Finset.sum_congr rfl fun u _ => hq u)
+
+/-- The iterated realization map sends the `c`-th basis vector to the point placed at `c`. -/
+theorem sdLinearIter_apply_vertexEmbed (K : PreAbstractSimplicialComplex V) :
+    ∀ (n : ℕ) (c : SdVertex K n), sdLinearIter K n (vertexEmbed c) = sdPoints K n c := by
+  intro n
+  induction n with
+  | zero => intro c; rfl
+  | succ n ih =>
+    intro c
+    exact comp_sdLinearMap_apply_vertexEmbed (sdLinearIter K n) (sdPoints K n) ih c
+
+/-- The iterated realization map carries `|sd^n K|` into `|K|`. -/
+theorem sdLinearIter_mem_space (K : PreAbstractSimplicialComplex V) :
+    ∀ (n : ℕ) {x : SdVertex K n → ℝ}, x ∈ (sdComplex K n).geometricRealization.space →
+      sdLinearIter K n x ∈ K.geometricRealization.space := by
+  intro n
+  induction n with
+  | zero => exact fun hx => hx
+  | succ n ih => exact fun hx => ih (sdLinearMap_mem_space hx)
+
+/-- The iterated realization map carries the vertex set of a face to the placed points. -/
+theorem sdLinearIter_image_faceEmbed (K : PreAbstractSimplicialComplex V) (n : ℕ)
+    (t : Finset (SdVertex K n)) :
+    sdLinearIter K n '' (↑(faceEmbed t) : Set (SdVertex K n → ℝ))
+      = sdPoints K n '' (↑t : Set (SdVertex K n)) := by
+  rw [coe_faceEmbed, Set.image_image]
+  exact Set.image_congr fun u _ => sdLinearIter_apply_vertexEmbed K n u
+
+/-- The image of a simplex of `sd^n K` is the simplex spanned by the placed points. -/
+theorem sdLinearIter_image_convexHull (K : PreAbstractSimplicialComplex V) (n : ℕ)
+    (t : Finset (SdVertex K n)) :
+    sdLinearIter K n '' (convexHull ℝ (↑(faceEmbed t) : Set (SdVertex K n → ℝ)))
+      = convexHull ℝ (sdPoints K n '' (↑t : Set (SdVertex K n))) := by
+  rw [← sdLinearIter_image_faceEmbed, (sdLinearIter K n).image_convexHull]
+
 /-! ### Dimension is preserved -/
 
 omit [DecidableEq V] [Fintype V] in
@@ -130,5 +220,16 @@ theorem exists_diam_sdPoints_lt {K : PreAbstractSimplicialComplex V} {m : ℝ} {
     simpa using this.mul_const m
   obtain ⟨n, hn⟩ := ((htend.eventually (gt_mem_nhds hε)).exists)
   exact ⟨n, fun s hs => lt_of_le_of_lt (diam_sdPoints_le hm hN n s hs) hn⟩
+
+/-- **The simplices of `sd^n K` are small in `|K|`.** Their images have diameter at most
+`(1 - 1/N)^n · m`. -/
+theorem diam_sdLinearIter_image_le {K : PreAbstractSimplicialComplex V} {m : ℝ} {N : ℕ}
+    (hm : ∀ s ∈ K.faces, diam (vertexEmbed '' (↑s : Set V)) ≤ m)
+    (hN : ∀ s ∈ K.faces, s.card ≤ N) (n : ℕ) {t : Finset (SdVertex K n)}
+    (ht : t ∈ (sdComplex K n).faces) :
+    diam (sdLinearIter K n '' (convexHull ℝ (↑(faceEmbed t) : Set (SdVertex K n → ℝ))))
+      ≤ (1 - (N : ℝ)⁻¹) ^ n * m := by
+  rw [sdLinearIter_image_convexHull, convexHull_diam]
+  exact diam_sdPoints_le hm hN n t ht
 
 end PreAbstractSimplicialComplex
