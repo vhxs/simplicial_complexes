@@ -264,4 +264,45 @@ theorem sdRealizeIterCM_apply (K : PreAbstractSimplicialComplex V) (n : ℕ)
     (x : (sdComplex K n).geometricRealization.space) :
     sdRealizeIterCM K n x = sdRealizeIterMap K n x := rfl
 
+/-! ### The iterated realization is a homeomorphism -/
+
+/-- Each subdivision realizes homeomorphically, so `|sd^n K| ≅ |K|`. -/
+theorem isHomeomorph_sdRealizeIterMap (K : PreAbstractSimplicialComplex V) :
+    ∀ n : ℕ, IsHomeomorph (sdRealizeIterMap K n) := by
+  intro n
+  induction n with
+  | zero =>
+    have : sdRealizeIterMap K 0 = id := by
+      funext x
+      exact Subtype.ext rfl
+    rw [this]
+    exact IsHomeomorph.id
+  | succ n ih =>
+    have hcomp : sdRealizeIterMap K (n + 1) = sdRealizeIterMap K n ∘ sdRealizeMap := by
+      funext x
+      exact Subtype.ext rfl
+    rw [hcomp]
+    exact ih.comp sdRealizeMap_isHomeomorph
+
+/-- `|sd^n K| ≅ |K|`: the identification of the iterated subdivision with the original space. -/
+noncomputable def sdRealizeIterHomeomorph (K : PreAbstractSimplicialComplex V) (n : ℕ) :
+    (sdComplex K n).geometricRealization.space ≃ₜ K.geometricRealization.space :=
+  (isHomeomorph_sdRealizeIterMap K n).homeomorph _
+
+@[simp]
+theorem sdRealizeIterHomeomorph_apply (K : PreAbstractSimplicialComplex V) (n : ℕ)
+    (x : (sdComplex K n).geometricRealization.space) :
+    sdRealizeIterHomeomorph K n x = sdRealizeIterMap K n x := rfl
+
+/-- The inverse identification `|K| ≅ |sd^n K|`, as a continuous map. -/
+noncomputable def sdRealizeIterSymmCM (K : PreAbstractSimplicialComplex V) (n : ℕ) :
+    C(K.geometricRealization.space, (sdComplex K n).geometricRealization.space) :=
+  ⟨(sdRealizeIterHomeomorph K n).symm, (sdRealizeIterHomeomorph K n).symm.continuous⟩
+
+@[simp]
+theorem sdRealizeIterMap_sdRealizeIterSymmCM (K : PreAbstractSimplicialComplex V) (n : ℕ)
+    (y : K.geometricRealization.space) :
+    sdRealizeIterMap K n (sdRealizeIterSymmCM K n y) = y :=
+  (sdRealizeIterHomeomorph K n).apply_symm_apply y
+
 end PreAbstractSimplicialComplex

@@ -285,4 +285,44 @@ theorem exists_homotopy_realizeMap [Fintype V] [Fintype W] [Nonempty W]
   obtain ⟨n, g, hg⟩ := exists_simplicialApproximation hm hN hN1 f
   exact ⟨n, g, ⟨homotopyOfMapsTo_openStar hg⟩⟩
 
+
+/-! ### The theorem for finite complexes -/
+
+/-- **Simplicial approximation for a finite complex.** The size hypotheses of
+`exists_simplicialApproximation` are automatic: a face has at most `Fintype.card V` vertices,
+and every face spans a subset of the finitely many basis vectors. -/
+theorem exists_simplicialApproximation_of_fintype [Fintype V] [Finite W] [Nonempty W]
+    {K : PreAbstractSimplicialComplex V} {L : PreAbstractSimplicialComplex W}
+    (f : C(K.geometricRealization.space, L.geometricRealization.space)) :
+    ∃ (n : ℕ) (g : SimplicialMap (sdComplex K n) L),
+      ∀ c ∈ (sdComplex K n).vertices,
+        Set.MapsTo (fun x => f (sdRealizeIterMap K n x))
+          (openStar (sdComplex K n) c) (openStar L (g c)) :=
+  exists_simplicialApproximation
+    (m := diam (Set.range (vertexEmbed : V → (V → ℝ)))) (N := max 1 (Fintype.card V))
+    (fun _ _ => diam_mono (Set.image_subset_range _ _) (Set.finite_range _).isBounded)
+    (fun s _ => le_trans (Finset.card_le_univ s) (le_max_right _ _)) (le_max_left _ _) f
+
+/-- **The simplicial approximation theorem.** Every continuous map between the geometric
+realizations of finite simplicial complexes is homotopic to the realization of a simplicial map
+on some iterated barycentric subdivision, carried back along the homeomorphism
+`|sd^n K| ≅ |K|`.
+
+No numeric hypotheses: given `f`, the subdivision depth, the simplicial map and the homotopy
+all come out of the construction. -/
+theorem exists_homotopy_of_fintype [Fintype V] [Fintype W] [Nonempty W]
+    {K : PreAbstractSimplicialComplex V} {L : PreAbstractSimplicialComplex W}
+    (f : C(K.geometricRealization.space, L.geometricRealization.space)) :
+    ∃ (n : ℕ) (g : SimplicialMap (sdComplex K n) L),
+      Nonempty (ContinuousMap.Homotopy
+        (g.realizeMap.comp (sdRealizeIterSymmCM K n)) f) := by
+  obtain ⟨n, g, hg⟩ := exists_simplicialApproximation_of_fintype f
+  have H : ContinuousMap.Homotopy g.realizeMap (f.comp (sdRealizeIterCM K n)) :=
+    homotopyOfMapsTo_openStar hg
+  have hEq : (f.comp (sdRealizeIterCM K n)).comp
+      (sdRealizeIterSymmCM K n) = f := by
+    refine ContinuousMap.ext fun y => ?_
+    exact congrArg f (sdRealizeIterMap_sdRealizeIterSymmCM K n y)
+  exact ⟨n, g, ⟨hEq ▸ H.compContinuousMap (sdRealizeIterSymmCM K n)⟩⟩
+
 end PreAbstractSimplicialComplex
