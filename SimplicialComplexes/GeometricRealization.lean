@@ -239,6 +239,13 @@ theorem geometricRealization_faces (K : PreAbstractSimplicialComplex V) :
     K.geometricRealization.faces = faceEmbed '' K.faces :=
   rfl
 
+/-- A vertex of `K` is realized as a point of `|K|`. -/
+theorem vertexEmbed_mem_space {K : PreAbstractSimplicialComplex V} {v : V}
+    (hv : ({v} : Finset V) ∈ K.faces) : vertexEmbed v ∈ K.geometricRealization.space := by
+  rw [SimplicialComplex.mem_space_iff]
+  exact ⟨faceEmbed {v}, ⟨{v}, hv, rfl⟩,
+    subset_convexHull ℝ _ (mem_faceEmbed_of_mem (Finset.mem_singleton_self v))⟩
+
 /-! ### Compactness -/
 
 /-- Over a finite vertex type, `|K|` is a finite union of convex hulls of finite sets,

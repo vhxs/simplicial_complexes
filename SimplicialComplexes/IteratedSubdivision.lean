@@ -199,6 +199,14 @@ theorem diam_sdPoints_le {K : PreAbstractSimplicialComplex V} {m : ℝ} {N : ℕ
         ≤ (1 - (N : ℝ)⁻¹) * ((1 - (N : ℝ)⁻¹) ^ n * m) := this
       _ = (1 - (N : ℝ)⁻¹) ^ (n + 1) * m := by ring
 
+omit [DecidableEq V] [Fintype V] in
+/-- A geometrically decaying bound eventually drops below any positive scale. -/
+theorem exists_pow_mul_lt {r m δ : ℝ} (hr0 : 0 ≤ r) (hr1 : r < 1) (hδ : 0 < δ) :
+    ∃ n : ℕ, r ^ n * m < δ := by
+  have htend : Filter.Tendsto (fun n : ℕ => r ^ n * m) Filter.atTop (nhds 0) := by
+    simpa using (tendsto_pow_atTop_nhds_zero_of_lt_one hr0 hr1).mul_const m
+  exact (htend.eventually (gt_mem_nhds hδ)).exists
+
 /-- The diameters eventually drop below any positive scale. -/
 theorem exists_diam_sdPoints_lt {K : PreAbstractSimplicialComplex V} {m : ℝ} {N : ℕ}
     (hm : ∀ s ∈ K.faces, diam (vertexEmbed '' (↑s : Set V)) ≤ m)
@@ -231,5 +239,15 @@ theorem diam_sdLinearIter_image_le {K : PreAbstractSimplicialComplex V} {m : ℝ
       ≤ (1 - (N : ℝ)⁻¹) ^ n * m := by
   rw [sdLinearIter_image_convexHull, convexHull_diam]
   exact diam_sdPoints_le hm hN n t ht
+
+/-- The map `|sd^n K| → |K|` realizing the iterated subdivision. -/
+noncomputable def sdRealizeIterMap (K : PreAbstractSimplicialComplex V) (n : ℕ) :
+    (sdComplex K n).geometricRealization.space → K.geometricRealization.space :=
+  fun x => ⟨sdLinearIter K n x.1, sdLinearIter_mem_space K n x.2⟩
+
+@[simp]
+theorem sdRealizeIterMap_coe (K : PreAbstractSimplicialComplex V) (n : ℕ)
+    (x : (sdComplex K n).geometricRealization.space) :
+    (sdRealizeIterMap K n x : V → ℝ) = sdLinearIter K n x.1 := rfl
 
 end PreAbstractSimplicialComplex
