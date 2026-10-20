@@ -170,6 +170,42 @@ theorem carrier_mem_faces {x : V → ℝ} (hx : x ∈ K.geometricRealization.spa
   obtain ⟨_, ⟨s, hs, rfl⟩, hxs⟩ := hx
   exact down_closed hs (carrier_subset_of_mem_convexHull hxs) (carrier_nonempty hx')
 
+/-- A point of `|K|` is a convex combination of the vertices of its own carrier: the carrier is
+the smallest face whose simplex contains it. -/
+theorem mem_convexHull_faceEmbed_carrier {x : V → ℝ} (hx : x ∈ K.geometricRealization.space) :
+    x ∈ convexHull ℝ (↑(faceEmbed (carrier x)) : Set (V → ℝ)) := by
+  have hx' := hx
+  simp only [SimplicialComplex.mem_space_iff, geometricRealization_faces,
+             Set.mem_image] at hx
+  obtain ⟨_, ⟨t, ht, rfl⟩, hxt⟩ := hx
+  obtain ⟨w, hw_nn, hw_sum, hx_eq⟩ := exists_weights_of_mem_convexHull_faceEmbed hxt
+  have hcoord : ∀ u, x u = if u ∈ t then w u else 0 := by
+    intro u
+    rw [hx_eq, Finset.sum_apply]
+    simp only [Pi.smul_apply, smul_eq_mul, vertexEmbed, Pi.single_apply, mul_ite, mul_one,
+      mul_zero]
+    rw [Finset.sum_ite_eq t u w]
+  have hsub : carrier x ⊆ t := carrier_subset_of_mem_convexHull hxt
+  have hzero : ∀ v ∈ t, v ∉ carrier x → x v = 0 := by
+    intro v _ hv
+    by_contra hne
+    exact hv (mem_carrier_iff.mpr hne)
+  have hsum1 : ∑ v ∈ carrier x, x v = 1 := by
+    rw [Finset.sum_subset hsub hzero, ← hw_sum]
+    exact Finset.sum_congr rfl fun v hv => by rw [hcoord v, ite_eq_left hv]
+  have hxsum : x = ∑ v ∈ carrier x, x v • vertexEmbed v := by
+    rw [Finset.sum_subset hsub (fun v hv hnv => by rw [hzero v hv hnv, zero_smul])]
+    conv_lhs => rw [hx_eq]
+    exact Finset.sum_congr rfl fun v hv => by rw [hcoord v, ite_eq_left hv]
+  have hcm : (carrier x).centerMass x vertexEmbed = x := by
+    rw [Finset.centerMass, hsum1, inv_one, one_smul, ← hxsum]
+  have hmem : (carrier x).centerMass x vertexEmbed
+      ∈ convexHull ℝ (↑(faceEmbed (carrier x)) : Set (V → ℝ)) := by
+    refine Finset.centerMass_mem_convexHull _ (fun v _ => mem_space_apply_nonneg hx' v) ?_ ?_
+    · rw [hsum1]; norm_num
+    · exact fun v hv => Finset.mem_coe.mpr (mem_faceEmbed_of_mem hv)
+  rwa [hcm] at hmem
+
 /-- A point lies in the open star of `v` exactly when `v` belongs to its carrier. -/
 theorem mem_openStar_iff_mem_carrier {v : V} {x : K.geometricRealization.space} :
     x ∈ openStar K v ↔ v ∈ carrier (x : V → ℝ) :=

@@ -250,4 +250,18 @@ theorem sdRealizeIterMap_coe (K : PreAbstractSimplicialComplex V) (n : ℕ)
     (x : (sdComplex K n).geometricRealization.space) :
     (sdRealizeIterMap K n x : V → ℝ) = sdLinearIter K n x.1 := rfl
 
+/-- The realization map of the iterated subdivision is continuous: it is the restriction of a
+linear map on a finite-dimensional space. -/
+noncomputable def sdRealizeIterCM (K : PreAbstractSimplicialComplex V) (n : ℕ) :
+    C((sdComplex K n).geometricRealization.space, K.geometricRealization.space) where
+  toFun := sdRealizeIterMap K n
+  continuous_toFun := by
+    apply Continuous.subtype_mk
+    exact (sdLinearIter K n).continuous_of_finiteDimensional.comp continuous_subtype_val
+
+@[simp]
+theorem sdRealizeIterCM_apply (K : PreAbstractSimplicialComplex V) (n : ℕ)
+    (x : (sdComplex K n).geometricRealization.space) :
+    sdRealizeIterCM K n x = sdRealizeIterMap K n x := rfl
+
 end PreAbstractSimplicialComplex

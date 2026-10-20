@@ -132,6 +132,83 @@ namespace PreAbstractSimplicialComplex
 
 variable {V W : Type*} [DecidableEq V] [DecidableEq W]
 
+/-! ### Approximation lands in a common face -/
+
+section CommonFace
+
+variable [Fintype V] [Fintype W]
+variable {K : PreAbstractSimplicialComplex V} {L : PreAbstractSimplicialComplex W}
+
+omit [DecidableEq V] in
+/-- The carrier of `|g| x` is covered by the `g`-image of the carrier of `x`. -/
+theorem carrier_toLinearMap_subset (g : SimplicialMap K L) (x : V → ℝ) :
+    carrier (g.toLinearMap x) ⊆ (carrier x).image g := by
+  intro w hw
+  rw [mem_carrier_iff] at hw
+  simp only [SimplicialMap.toLinearMap] at hw
+  rw [FunOnFinite.linearMap_apply_apply] at hw
+  obtain ⟨c, hc, hxc⟩ := Finset.exists_ne_zero_of_sum_ne_zero hw
+  have hgc : g c = w := by simpa using hc
+  exact Finset.mem_image.mpr ⟨c, mem_carrier_iff.mpr hxc, hgc⟩
+
+/-- **Under the star condition the two maps never separate.** For every `x`, both `|g| x` and
+`F x` lie in the simplex spanned by the carrier of `F x`.
+
+Each vertex `c` of the carrier of `x` is a vertex of `K`, and `x` lies in its open star, so
+`F x` lies in the open star of `g c`; that is, `g c` belongs to the carrier of `F x`. Hence the
+carrier of `|g| x` is contained in that of `F x`. -/
+theorem mem_convexHull_carrier_of_mapsTo_openStar
+    {F : K.geometricRealization.space → L.geometricRealization.space} {g : SimplicialMap K L}
+    (hg : ∀ v ∈ K.vertices, Set.MapsTo F (openStar K v) (openStar L (g v)))
+    (x : K.geometricRealization.space) :
+    (g.realizeMap x : W → ℝ)
+      ∈ convexHull ℝ (↑(faceEmbed (carrier (F x : W → ℝ))) : Set (W → ℝ)) := by
+  have hstep : (carrier x.1).image g ⊆ carrier (F x : W → ℝ) := by
+    intro w hw
+    obtain ⟨c, hc, rfl⟩ := Finset.mem_image.mp hw
+    have hcvert : c ∈ K.vertices :=
+      mem_vertices.mpr (singleton_mem_of_mem (carrier_mem_faces x.2) hc)
+    have hxstar : x ∈ openStar K c := mem_openStar_iff_mem_carrier.mpr hc
+    exact mem_openStar_iff_mem_carrier.mp (hg c hcvert hxstar)
+  have hsub : carrier (g.realizeMap x : W → ℝ) ⊆ carrier (F x : W → ℝ) :=
+    (carrier_toLinearMap_subset g x.1).trans hstep
+  exact convexHull_mono (Finset.coe_subset.mpr (faceEmbed_mono hsub))
+    (mem_convexHull_faceEmbed_carrier (g.realizeMap x).2)
+
+/-- A point on the segment from `|g| x` to `F x` stays in `|L|`: both ends lie in the simplex
+spanned by the carrier of `F x`, which is convex and contained in `|L|`. -/
+theorem segment_mem_space
+    {F : K.geometricRealization.space → L.geometricRealization.space} {g : SimplicialMap K L}
+    (hg : ∀ v ∈ K.vertices, Set.MapsTo F (openStar K v) (openStar L (g v)))
+    (x : K.geometricRealization.space) {t : ℝ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
+    (1 - t) • (g.realizeMap x : W → ℝ) + t • (F x : W → ℝ)
+      ∈ L.geometricRealization.space := by
+  have hface : faceEmbed (carrier (F x : W → ℝ)) ∈ L.geometricRealization.faces :=
+    ⟨carrier (F x : W → ℝ), carrier_mem_faces (F x).2, rfl⟩
+  refine SimplicialComplex.convexHull_subset_space hface ?_
+  exact convex_convexHull ℝ _ (mem_convexHull_carrier_of_mapsTo_openStar hg x)
+    (mem_convexHull_faceEmbed_carrier (F x).2) (by linarith) ht0 (by ring)
+
+/-- **The straight-line homotopy.** A simplicial map satisfying the star condition for `F` is
+homotopic to `F`: the segment joining the two never leaves `|L|`. -/
+noncomputable def homotopyOfMapsTo_openStar
+    {F : C(K.geometricRealization.space, L.geometricRealization.space)} {g : SimplicialMap K L}
+    (hg : ∀ v ∈ K.vertices, Set.MapsTo F (openStar K v) (openStar L (g v))) :
+    ContinuousMap.Homotopy g.realizeMap F where
+  toFun p := ⟨(1 - (p.1 : ℝ)) • (g.realizeMap p.2 : W → ℝ) + (p.1 : ℝ) • (F p.2 : W → ℝ),
+    segment_mem_space hg p.2 p.1.2.1 p.1.2.2⟩
+  continuous_toFun := by
+    apply Continuous.subtype_mk
+    fun_prop
+  map_zero_left x := by
+    apply Subtype.ext
+    simp
+  map_one_left x := by
+    apply Subtype.ext
+    simp
+
+end CommonFace
+
 /-! ### The simplicial approximation theorem -/
 
 /-- **Simplicial approximation.** Every continuous map `f : |K| → |L|` admits a simplicial
@@ -191,5 +268,21 @@ theorem exists_simplicialApproximation [Fintype V] [Finite W] [Nonempty W]
     exact lt_of_le_of_lt hdist hn
   choose! g hg using key
   exact ⟨SimplicialMap.ofStarCondition _ g hg, hg⟩
+
+
+/-- **Simplicial approximation with homotopy.** After finitely many barycentric subdivisions,
+every continuous map `f : |K| → |L|` is homotopic to the realization of a simplicial map.
+
+This combines the two halves: the star condition produces the simplicial map, and the segment
+joining it to `f` stays inside `|L|` because the two always land in a common simplex. -/
+theorem exists_homotopy_realizeMap [Fintype V] [Fintype W] [Nonempty W]
+    {K : PreAbstractSimplicialComplex V} {L : PreAbstractSimplicialComplex W} {m : ℝ} {N : ℕ}
+    (hm : ∀ s ∈ K.faces, diam (vertexEmbed '' (↑s : Set V)) ≤ m)
+    (hN : ∀ s ∈ K.faces, s.card ≤ N) (hN1 : 1 ≤ N)
+    (f : C(K.geometricRealization.space, L.geometricRealization.space)) :
+    ∃ (n : ℕ) (g : SimplicialMap (sdComplex K n) L),
+      Nonempty (ContinuousMap.Homotopy g.realizeMap (f.comp (sdRealizeIterCM K n))) := by
+  obtain ⟨n, g, hg⟩ := exists_simplicialApproximation hm hN hN1 f
+  exact ⟨n, g, ⟨homotopyOfMapsTo_openStar hg⟩⟩
 
 end PreAbstractSimplicialComplex
