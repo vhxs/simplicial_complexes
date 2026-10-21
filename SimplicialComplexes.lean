@@ -8,3 +8,4 @@ import SimplicialComplexes.SimplicialApproximation
 import SimplicialComplexes.Mesh
 import SimplicialComplexes.IteratedSubdivision
 import SimplicialComplexes.ChromaticSubdivision
+import SimplicialComplexes.Task
