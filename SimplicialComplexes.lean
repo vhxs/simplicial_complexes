@@ -9,3 +9,4 @@ import SimplicialComplexes.Mesh
 import SimplicialComplexes.IteratedSubdivision
 import SimplicialComplexes.ChromaticSubdivision
 import SimplicialComplexes.Task
+import SimplicialComplexes.Subdivision
