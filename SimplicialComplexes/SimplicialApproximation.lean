@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Vikram Saraph. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Vikram Saraph
+-/
 import SimplicialComplexes.Star
 import SimplicialComplexes.IteratedSubdivision
 
@@ -96,7 +101,7 @@ theorem image_mem_faces_of_mapsTo_openStar [Finite V] [Finite W]
     intro v hv
     have hbv : b ∈ openStar K v := by
       rw [mem_openStar_iff_mem_carrier]
-      show v ∈ carrier (barycenter s)
+      change v ∈ carrier (barycenter s)
       rw [carrier_barycenter]
       exact hv
     exact mem_openStar_iff_mem_carrier.mp (hg v (mem_vertices_of_mem hs hv) hbv)
